@@ -17,7 +17,7 @@ Option Explicit
 ' # テーブルはふたつ使う。ひとつはハッシュとブック名のペア値、ふたつはシート名とブックのフルパスのペア値
 
 Dim Path As String
-Dim Books As Collection
+Dim Books As Object
 
 Sub Init(p)
     If p <> "" Then
@@ -25,17 +25,11 @@ Sub Init(p)
         Path = p
     End If
 End Sub
-
 Function Indexing() As Collection
 'インデックスをコレクションで返す
-    Set Indexing = ScanWorkbook(Path)
-    Stop
-End Function
-
-Private Function ScanWorkbook(p) As Collection
     Dim File As String
     File = Dir(Path & Application.PathSeparator & "*.xls*")
-    Set Books = New Collection 'グローバル変数のBooksコレクションインスタンスを生成
+    Set Books = CreateObject("Scripting.Dictionary") 'グローバル変数のBooksコレクションインスタンスを生成
     
     Do While File <> ""
         If Not Left$(File, 1) = "~" Then 'バックアップファイルや隠しファイルみたいなものは避ける
@@ -64,8 +58,8 @@ Private Function ScanWorkbook(p) As Collection
             ScanWorkbook (f.Path)
         Next
     End With
-    Stop
-    Set ScanWorkbook = Books
+	
+	updateDB Books
 
     Set wkb = Nothing
     Set f = Nothing
@@ -76,7 +70,7 @@ Private Sub Scan(wkb, wkbpath)
     On Error Resume Next '同じキーが出てくるけど、それは関係ないシートだからスキップしてOK
     Dim v
     For Each v In IDs
-        Books.Add Item:=wkbpath, Key:=v
+        Books(v) = wkbpath
     Next
     On Error GoTo 0
 End Sub
@@ -97,8 +91,13 @@ Private Function GetSheetNames(wkb)
     GetSheetNames = names
 End Function
 
-Private Sub updateDB(ret)
-
+Private Sub updateDB(coll as Collection)
+	const TABLE_NAME as string = "Quotation_index"
+	const DB_FILE_NAME as string = ""
+	dim sql as string
+	sql = "INSERT INTO " & TABLE_NAME & " (quotation_id, full_path) VALEUS (" & _
+			"?, ?)"
+	SQlite_no_ADODB.Insert sql, coll
 End Sub
 Private Function EvalBookIsOpen(wkb, Path) As Workbook
 '使用中のファイルを開かない

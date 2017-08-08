@@ -138,7 +138,7 @@ Private Function RotateRow(Rows) As Variant
     '
 End Function
 
-Public Function Insert(sql As String, DB_FILE_NAME As String) As Variant
+Public Function Insert(sql As String, rows As String) As Variant
     Dim InitReturn As Long  'SQLiteDLL
     Dim dbFile As String    'DBÉtÉ@ÉCÉã
     Dim RetVal As Long      'DBData
@@ -175,7 +175,8 @@ Public Function Insert(sql As String, DB_FILE_NAME As String) As Variant
     Debug.Print "SQLite3Open returned " & RetVal
     Debug.Print myDbHandle
 
-     'SQL statementçÏê¨
+    'SQL statementçÏê¨
+    sql = SQLBuilder(rows)
     RetVal = SQLite3PrepareV2(myDbHandle, sql, myStmtHandle)
     Debug.Print "SQLite3PrepareV2 returned " & RetVal
 
@@ -195,3 +196,16 @@ Public Function Insert(sql As String, DB_FILE_NAME As String) As Variant
     RetVal = SQLite3Close(myDbHandle)
     Debug.Print "SQLite3Close returned " & RetVal
 End Function
+private function SQLBuilder(rows) as Variant
+    dim key as Variant
+    for each key in rows.keys
+        dim item as String
+        item = "(" & key & "," & rows(key) & ")"
+        dim stack
+        stack = stack & row & ","
+    next
+    if right$(stack, 1) = "," then stack = left$(stack, len(stack) -1 )
+    dim placeholderPos as long
+    placeholderpos = instr(sql, "?") -1
+    SQLBuilder = mid$(sql, 0, placeholderpos) & stack
+End function
