@@ -28,18 +28,14 @@ End Sub
 
 Function Indexing() As Collection
 'インデックスをコレクションで返す
-    Set Books = New Collection
-    Dim ret
-    ret = ScanWorkbook(Path)
-    Dim v
+    Set Indexing = ScanWorkbook(Path)
     Stop
-    'v = IsArrayEx(ret)
-    'If v = 1 Then updateDB (ret)
 End Function
 
-Private Function ScanWorkbook(p)
+Private Function ScanWorkbook(p) As Collection
     Dim File As String
     File = Dir(Path & Application.PathSeparator & "*.xls*")
+    Set Books = New Collection 'グローバル変数のBooksコレクションインスタンスを生成
     
     Do While File <> ""
         If Not Left$(File, 1) = "~" Then 'バックアップファイルや隠しファイルみたいなものは避ける
@@ -69,7 +65,7 @@ Private Function ScanWorkbook(p)
         Next
     End With
     Stop
-    ScanWorkbook = Books
+    Set ScanWorkbook = Books
 
     Set wkb = Nothing
     Set f = Nothing

@@ -29,7 +29,7 @@ Function calcSha1(Path) As String
 ' Pathで受けたパスにあるファイルのSha1ハッシュを返す
 
     If Path = "" Then Exit Function
-    ' 参照設定：Active X Data Object x.x Librasy　必要
+    ' 参照設定：Microsoft Active X Data Object x.x Librasy　必要
     Dim BinaryStream As ADODB.stream
     Set BinaryStream = New ADODB.stream
     BinaryStream.Type = adTypeBinary

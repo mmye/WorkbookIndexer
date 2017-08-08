@@ -1,6 +1,7 @@
 Attribute VB_Name = "Tests"
 Option Explicit
 
+
 Sub TestScrape()
     Dim v As Variant
     v = Scrape(ActiveSheet)
@@ -35,6 +36,12 @@ Sub TestDirLooper()
     Dim c As DirLooper
     Set c = New DirLooper
     c.Init p
-    c.Indexing
+    Stop
+    'BookDataにはItem=フルパス、Key=見積書番号のコレクションが返ってくる
+    'Keyを参照するにはFor eachループを使う。
+    Dim BookData As Collection
+    Set BookData = New Collection
+    Set BookData = c.Indexing
     Stop
 End Sub
+
