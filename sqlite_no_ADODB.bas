@@ -176,7 +176,7 @@ Public Function Insert(sql As String, rows As String) As Variant
     Debug.Print myDbHandle
 
     'SQL statement作成
-    sql = SQLBuilder(rows)
+    sql = SQLBuilder(rows) '複数行を一気にINSERTするSQLクエリを組み立てる
     RetVal = SQLite3PrepareV2(myDbHandle, sql, myStmtHandle)
     Debug.Print "SQLite3PrepareV2 returned " & RetVal
 
@@ -200,12 +200,12 @@ private function SQLBuilder(rows) as Variant
     dim key as Variant
     for each key in rows.keys
         dim item as String
-        item = "(" & key & "," & rows(key) & ")"
+        item = "(" & """" & key & """" & "," & """" & rows(key) & """" & ")"
         dim stack
-        stack = stack & row & ","
+        stack = stack & item & ","
     next
     if right$(stack, 1) = "," then stack = left$(stack, len(stack) -1 )
     dim placeholderPos as long
-    placeholderpos = instr(sql, "?") -1
-    SQLBuilder = mid$(sql, 0, placeholderpos) & stack
+    placeholderpos = instr(sql, "?")
+    SQLBuilder = mid$(sql, 0, placeholderpos -1) & stack
 End function
