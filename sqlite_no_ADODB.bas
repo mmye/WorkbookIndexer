@@ -202,7 +202,7 @@ Private Function SQLBuilder(sql, rows) As Variant
     For Each key In rows.keys
         Dim item As String
         item = "(" & """" & key & """" & "," & """" & rows(key) & """" & ")"
-        Dim stack
+        Dim stack As String
         stack = stack & item & ","
     Next
     If Right$(stack, 1) = "," Then stack = left$(stack, Len(stack) - 1)
@@ -210,6 +210,6 @@ Private Function SQLBuilder(sql, rows) As Variant
     placeholderPos = InStr(sql, "?")
         
     'なぜか改行がまじるので、エラー回避のために除去する
-    stack = Replace(stack, vbCr, "")
+    stack = RegularExpressions.RegexReplace(stack, "\n", "")
     SQLBuilder = Mid$(sql, 1, placeholderPos - 2) & stack
 End Function

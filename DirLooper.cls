@@ -11,9 +11,8 @@ Option Explicit
 
 ' # 受け取ったルートディレクトリを再帰ループするクラス
 ' # ループ内でおこなう処理は関数かプライベートサブルーチンでやること
-
 ' # やること：ワークブックファイルのSha1ハッシュを計算して、更新があったときのみ中身をスキャンする
-' #             スキャンした内容は配列として返り値で戻す。これをあとでSQLite DBに書き込む。
+' #           スキャンした内容は配列として返り値で戻す。これをあとでSQLite DBに書き込む。
 ' # テーブルはふたつ使う。ひとつはハッシュとブック名のペア値、ふたつはシート名とブックのフルパスのペア値
 
 Dim Path As String
@@ -85,9 +84,10 @@ Private Function GetSheetNames(wkb)
     Dim st
     Dim c: c = 0
     For Each st In wkb.Sheets
-        names(c) = st.name
-        Debug.Print names(c)
-        c = c + 1
+        If RegularExpressions.RegexTest(st.name, "^N\d{2}[A-Z]-+\d+") Then
+            names(c) = st.name
+            c = c + 1
+        End If
     Next
     GetSheetNames = names
 End Function
