@@ -23,7 +23,7 @@ End Sub
 Function Scrape() As Variant
     'ゴミが入らないようになるべくシート範囲を限定したい
     Dim LastRow
-    LastRow = st.UsedRange.Item(st.UsedRange.Count).row
-    Scrape = Intersect(st.UsedRange, st.Rows("29:" & LastRow & ""))
+    LastRow = st.UsedRange.item(st.UsedRange.Count).row
+    Scrape = Intersect(st.UsedRange, st.rows("29:" & LastRow & ""))
 End Function
 

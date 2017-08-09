@@ -50,8 +50,8 @@ Public Function SearchAll(sql As String, DB_FILE_NAME As String) As Variant
     Debug.Print "SQLite3Step returned " & RetVal
 
     'レコード取得
-    Dim Rows As Variant
-    Rows = GetRows(myStmtHandle, Rows)
+    Dim rows As Variant
+    rows = GetRows(myStmtHandle, rows)
     
     'statement 削除
     RetVal = SQLite3Finalize(myStmtHandle)
@@ -61,13 +61,13 @@ Public Function SearchAll(sql As String, DB_FILE_NAME As String) As Variant
     RetVal = SQLite3Close(myDbHandle)
     Debug.Print "SQLite3Close returned " & RetVal
     
-    SearchAll = Rows
+    SearchAll = rows
 End Function
 Private Function GetRows(dbh, arr) As Variant
     Dim rowCount As Long
     Dim colCount As Long
     Dim colType As Long
-    Dim Rows() As Variant
+    Dim rows() As Variant
     Dim ret As Long
     Dim i As Long
 
@@ -77,18 +77,18 @@ Private Function GetRows(dbh, arr) As Variant
     Do While ret <> SQLITE_DONE
         If rowCount = 0 Then
             colCount = SQLite3ColumnCount(dbh)
-            ReDim Rows(colCount - 1, rowCount)
+            ReDim rows(colCount - 1, rowCount)
         Else
-            ReDim Preserve Rows(colCount - 1, rowCount)
+            ReDim Preserve rows(colCount - 1, rowCount)
         End If
         For i = 0 To colCount - 1
             colType = SQLite3ColumnType(dbh, i)
-            Rows(i, rowCount) = ColumnValue(dbh, i, colType)
+            rows(i, rowCount) = ColumnValue(dbh, i, colType)
         Next
         ret = SQLite3Step(dbh)
         rowCount = rowCount + 1
     Loop
-    GetRows = Rows
+    GetRows = rows
 End Function
 '--------------------
 'Sqlite3Demo.basより
@@ -106,12 +106,12 @@ Private Function ColumnValue(ByVal stmtHandle As Long, ByVal ZeroBasedColIndex A
             ColumnValue = Null
     End Select
 End Function
-Private Sub Write2Sheet(Rows As Variant)
+Private Sub Write2Sheet(rows As Variant)
     Dim st As Worksheet
     Set st = ActiveSheet
     Dim w As Long, h As Long
-    w = UBound(Rows, 2) + 1
-    h = UBound(Rows, 1) + 1
+    w = UBound(rows, 2) + 1
+    h = UBound(rows, 1) + 1
     
     'Rowオブジェクトの幅と高さ
     Debug.Print w
@@ -119,15 +119,15 @@ Private Sub Write2Sheet(Rows As Variant)
     
     Set st = Nothing
 End Sub
-Private Function RotateRow(Rows) As Variant
+Private Function RotateRow(rows) As Variant
     
     Dim r As Long, c As Long
     Dim i As Long
     Dim b As String
     
     Dim w As Long, h As Long
-    w = UBound(Rows, 2) + 1
-    h = UBound(Rows, 1) + 1
+    w = UBound(rows, 2) + 1
+    h = UBound(rows, 1) + 1
     
     Dim arr() As Variant
     ReDim arr(w, h) As Variant ' タテとヨコを逆にしてる
@@ -138,7 +138,7 @@ Private Function RotateRow(Rows) As Variant
     '
 End Function
 
-Public Function Insert(sql As String, rows As String) As Variant
+Public Function Insert(sql As String, rows As Object, DB_FILE_NAME As String) As Variant
     Dim InitReturn As Long  'SQLiteDLL
     Dim dbFile As String    'DBファイル
     Dim RetVal As Long      'DBData
@@ -176,7 +176,8 @@ Public Function Insert(sql As String, rows As String) As Variant
     Debug.Print myDbHandle
 
     'SQL statement作成
-    sql = SQLBuilder(rows) '複数行を一気にINSERTするSQLクエリを組み立てる
+    sql = SQLBuilder(sql, rows) '複数行を一気にINSERTするSQLクエリを組み立てる
+    Debug.Print sql
     RetVal = SQLite3PrepareV2(myDbHandle, sql, myStmtHandle)
     Debug.Print "SQLite3PrepareV2 returned " & RetVal
 
@@ -196,16 +197,19 @@ Public Function Insert(sql As String, rows As String) As Variant
     RetVal = SQLite3Close(myDbHandle)
     Debug.Print "SQLite3Close returned " & RetVal
 End Function
-private function SQLBuilder(rows) as Variant
-    dim key as Variant
-    for each key in rows.keys
-        dim item as String
+Private Function SQLBuilder(sql, rows) As Variant
+    Dim key As Variant
+    For Each key In rows.keys
+        Dim item As String
         item = "(" & """" & key & """" & "," & """" & rows(key) & """" & ")"
-        dim stack
+        Dim stack
         stack = stack & item & ","
-    next
-    if right$(stack, 1) = "," then stack = left$(stack, len(stack) -1 )
-    dim placeholderPos as long
-    placeholderpos = instr(sql, "?")
-    SQLBuilder = mid$(sql, 0, placeholderpos -1) & stack
-End function
+    Next
+    If Right$(stack, 1) = "," Then stack = left$(stack, Len(stack) - 1)
+    Dim placeholderPos As Long
+    placeholderPos = InStr(sql, "?")
+        
+    'なぜか改行がまじるので、エラー回避のために除去する
+    stack = Replace(stack, vbCr, "")
+    SQLBuilder = Mid$(sql, 1, placeholderPos - 2) & stack
+End Function

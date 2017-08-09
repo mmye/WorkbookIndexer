@@ -17,7 +17,6 @@ Option Explicit
 ' # テーブルはふたつ使う。ひとつはハッシュとブック名のペア値、ふたつはシート名とブックのフルパスのペア値
 
 Dim Path As String
-Dim Books As Object
 
 Sub Init(p)
     If p <> "" Then
@@ -29,10 +28,12 @@ Function Indexing() As Collection
 'インデックスをコレクションで返す
     Dim File As String
     File = Dir(Path & Application.PathSeparator & "*.xls*")
+    
+    Dim Books As Object
     Set Books = CreateObject("Scripting.Dictionary") 'グローバル変数のBooksコレクションインスタンスを生成
     
     Do While File <> ""
-        If Not Left$(File, 1) = "~" Then 'バックアップファイルや隠しファイルみたいなものは避ける
+        If Not left$(File, 1) = "~" Then 'バックアップファイルや隠しファイルみたいなものは避ける
             Dim wkb As Workbook
             Dim wkbpath
             wkbpath = Path & Application.PathSeparator & File
@@ -46,7 +47,7 @@ Function Indexing() As Collection
             ActiveWindow.Visible = False
             If Not wkb Is Nothing Then
                 Debug.Print wkb.name
-                Scan wkb, wkbpath
+                Scan wkb, wkbpath, Books
                 CloseWkb wkb
             End If
         End If
@@ -55,16 +56,16 @@ Function Indexing() As Collection
     Dim f As Object
     With CreateObject("Scripting.FileSystemObject")
         For Each f In .GetFolder(Path).SubFolders
-            ScanWorkbook (f.Path)
+            Indexing (f.Path)
         Next
     End With
-	
-	updateDB Books
+        
+    updateDB Books
 
     Set wkb = Nothing
     Set f = Nothing
 End Function
-Private Sub Scan(wkb, wkbpath)
+Private Sub Scan(wkb, wkbpath, Books)
     Dim IDs
     IDs = GetSheetNames(wkb)
     On Error Resume Next '同じキーが出てくるけど、それは関係ないシートだからスキップしてOK
@@ -91,13 +92,13 @@ Private Function GetSheetNames(wkb)
     GetSheetNames = names
 End Function
 
-Private Sub updateDB(coll as Collection)
-	const TABLE_NAME as string = "Quotation_index"
-	const DB_FILE_NAME as string = ""
-	dim sql as string
-	sql = "INSERT INTO " & TABLE_NAME & " (quotation_id, full_path) VALEUS (" & _
-			"?, ?)"
-	SQlite_no_ADODB.Insert sql, coll
+Private Sub updateDB(coll As Object)
+        Const TABLE_NAME As String = "quotation_index"
+        Const DB_FILE_NAME As String = "winckler.sqlite3"
+        Dim sql As String
+        sql = "INSERT INTO " & TABLE_NAME & " (quotation_id, quotation_fullpath) VALUES (" & _
+                        "?, ?)"
+        sqlite_no_ADODB.Insert sql, coll, DB_FILE_NAME
 End Sub
 Private Function EvalBookIsOpen(wkb, Path) As Workbook
 '使用中のファイルを開かない
